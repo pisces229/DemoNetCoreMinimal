@@ -11,6 +11,8 @@ builder.Logging
     .AddFilter("System", LogLevel.Information)
     .AddConsole();
 
+builder.Services.AddCors();
+
 #region Services
 builder.Services.AddScoped<Service>();
 #endregion
@@ -26,22 +28,39 @@ builder.Services.Configure<JsonOptions>(options =>
 var app = builder.Build();
 
 #region 中介軟體
-//名稱                                  描述                          API
-//Authentication                        認證中介軟體                  app.UseAuthentication()
-//Authorization                         授權中介軟體.                 app.UseAuthorization()
-//CORS                                  跨域中介軟體.                 app.UseCors()
-//Exception Handler                     全域性異常處理中介軟體.       app.UseExceptionHandler()
-//Forwarded Headers                     代理頭資訊轉發中介軟體.       app.UseForwardedHeaders()
-//HTTPS Redirection                     Https重定向中介軟體.          app.UseHttpsRedirection()
-//HTTP Strict Transport Security (HSTS) 特殊響應頭的安全增強中介軟體. app.UseHsts()
-//Request Logging                       HTTP請求和響應日誌中介軟體.   app.UseHttpLogging()
-//Response Caching                      輸出快取中介軟體.             app.UseResponseCaching()
-//Response Compression                  響應壓縮中介軟體.             app.UseResponseCompression()
-//Session                               Session中介軟體               app.UseSession()
-//Static Files                          靜態檔案中介軟體.             app.UseStaticFiles(), app.UseFileServer()
-//WebSockets                            WebSocket支援中介軟體.        app.UseWebSockets()
+//認證中介軟體
+//app.UseAuthentication()
+//授權中介軟體
+//app.UseAuthorization()
+//跨域中介軟體
+//app.UseCors()
+//全域性異常處理中介軟體
+//app.UseExceptionHandler()
+//代理頭資訊轉發中介軟體
+//app.UseForwardedHeaders()
+//Https重定向中介軟體
+//app.UseHttpsRedirection()
+//特殊響應頭的安全增強中介軟體
+//app.UseHsts()
+//HTTP請求和響應日誌中介軟體
+//app.UseHttpLogging()
+//輸出快取中介軟體
+//app.UseResponseCaching()
+//響應壓縮中介軟體
+//app.UseResponseCompression()
+//Session中介軟體
+//app.UseSession()
+//靜態檔案中介軟體
+//app.UseStaticFiles()
+//app.UseFileServer()
+//WebSocket支援中介軟體
+//app.UseWebSockets()
 #endregion
 
+app.UseCors(config => config.AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .WithExposedHeaders("content-disposition"));
 app.UseDeveloperExceptionPage();
 app.UseHttpLogging();
 
@@ -67,7 +86,7 @@ app.MapGet("/{id}", async (HttpContext context,
     return await Task.FromResult(Results.Ok());
 });
 // test
-app.MapGet("/ValueFromQuery", async (HttpContext context, 
+app.MapGet("/ValueFromQuery", async (HttpContext context,
     [FromQuery(Name = "model")] string model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
@@ -80,9 +99,9 @@ app.MapPost("/ValueFromBody", async (HttpContext context,
     return await Task.FromResult(Results.Ok(model));
 });
 app.MapGet("/JsonFromQuery", async  (HttpContext context, 
-    [FromQuery(Name = "text")] string? text, 
-    [FromQuery(Name = "value")] int? value, 
-    [FromQuery(Name = "date")] DateTime? date) =>
+    [FromQuery(Name = "Text")] string? text, 
+    [FromQuery(Name = "Value")] int? value, 
+    [FromQuery(Name = "Date")] DateTime? date) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(text));
     app.Logger.LogInformation(JsonSerializer.Serialize(value));
@@ -106,14 +125,16 @@ app.MapGet("/Download", async (HttpContext context) =>
     var source = "d:/workspace/Download.zip";
     if (File.Exists(source))
     {
+        context.Response.StatusCode = 200;
         context.Response.ContentType = "application/download";
         context.Response.Headers.Add("content-disposition", $"attachment; filename=Download.zip");
         await context.Response.SendFileAsync(source);
-        return await Task.FromResult(Results.Ok());
     }
     else
     {
-        return await Task.FromResult(Results.Ok("File Not Exists"));
+        context.Response.StatusCode = 200;
+        context.Response.ContentType = "text/plain";
+        await context.Response.WriteAsync("File Not Exists");
     }
 });
 // login
@@ -123,7 +144,7 @@ app.MapPost("/SignIn", async (HttpContext context,
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
     if (!string.IsNullOrEmpty(model.Account) && !string.IsNullOrEmpty(model.Password))
     {
-        return await Task.FromResult(Results.Ok(DateTime.Now));
+        return await Task.FromResult(Results.Ok(DateTime.Now.AddSeconds(10)));
     }
     else
     {
@@ -142,7 +163,7 @@ app.MapPost("/Refresh", async (HttpContext context,
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
     if (model != null)
     {
-        return await Task.FromResult(Results.Ok(DateTime.Now));
+        return await Task.FromResult(Results.Ok(DateTime.Now.AddSeconds(10)));
     }
     else
     {
@@ -163,6 +184,15 @@ class DefaultMiddleware
 {
     private readonly RequestDelegate _dequestDelegate;
     private readonly ILogger<DefaultMiddleware> _logger;
+    //private readonly List<string> _authorizationPath = new List<string>()
+    //{
+    //    "/ValueFromQuery",
+    //    "/ValueFromBody",
+    //    "/JsonFromQuery",
+    //    "/JsonFromBody",
+    //    "/Download",
+    //    "/Upload",
+    //};
     public DefaultMiddleware(RequestDelegate requestDelegate,
         ILogger<DefaultMiddleware> logger)
     {
@@ -172,6 +202,49 @@ class DefaultMiddleware
     public async Task Invoke(HttpContext context)
     {
         _logger.LogInformation($"[{context.Request.Method}][{context.Request.Path}][{context.Request.QueryString}]");
+        await _dequestDelegate(context);
+        //if (!_authorizationPath.Contains(context.Request.Path))
+        //{
+        //    await _dequestDelegate(context);
+        //}
+        //else
+        //{
+        //    if (context.Request.Headers.Keys.Contains("token"))
+        //    {
+        //        try
+        //        {
+        //            var token = Convert.ToDateTime(context.Request.Headers["token"]);
+        //            if (token > DateTime.Now)
+        //            {
+        //                await _dequestDelegate(context);
+        //            }
+        //            else
+        //            {
+        //                context.Response.StatusCode = 401;
+        //            }
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            _logger.LogError(e.ToString());
+        //            context.Response.StatusCode = 403;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        context.Response.StatusCode = 403;
+        //    }
+        //}
+    }
+}
+class TokenMiddleware
+{
+    private readonly RequestDelegate _dequestDelegate;
+    public TokenMiddleware(RequestDelegate requestDelegate)
+    {
+        _dequestDelegate = requestDelegate;
+    }
+    public async Task Invoke(HttpContext context)
+    {
         await _dequestDelegate(context);
     }
 }
