@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+ï»¿using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
 #region WebApplicationBuilder
@@ -27,33 +27,33 @@ builder.Services.Configure<JsonOptions>(options =>
 #region WebApplication
 var app = builder.Build();
 
-#region ¤¤¤¶³nÅé
-//»{ÃÒ¤¤¤¶³nÅé
+#region ä¸­ä»‹è»Ÿé«”
+//èªè­‰ä¸­ä»‹è»Ÿé«”
 //app.UseAuthentication()
-//±ÂÅv¤¤¤¶³nÅé
+//æŽˆæ¬Šä¸­ä»‹è»Ÿé«”
 //app.UseAuthorization()
-//¸ó°ì¤¤¤¶³nÅé
+//è·¨åŸŸä¸­ä»‹è»Ÿé«”
 //app.UseCors()
-//¥þ°ì©Ê²§±`³B²z¤¤¤¶³nÅé
+//å…¨åŸŸæ€§ç•°å¸¸è™•ç†ä¸­ä»‹è»Ÿé«”
 //app.UseExceptionHandler()
-//¥N²zÀY¸ê°TÂàµo¤¤¤¶³nÅé
+//ä»£ç†é ­è³‡è¨Šè½‰ç™¼ä¸­ä»‹è»Ÿé«”
 //app.UseForwardedHeaders()
-//Https­«©w¦V¤¤¤¶³nÅé
+//Httpsé‡å®šå‘ä¸­ä»‹è»Ÿé«”
 //app.UseHttpsRedirection()
-//¯S®íÅTÀ³ÀYªº¦w¥þ¼W±j¤¤¤¶³nÅé
+//ç‰¹æ®ŠéŸ¿æ‡‰é ­çš„å®‰å…¨å¢žå¼·ä¸­ä»‹è»Ÿé«”
 //app.UseHsts()
-//HTTP½Ð¨D©MÅTÀ³¤é»x¤¤¤¶³nÅé
+//HTTPè«‹æ±‚å’ŒéŸ¿æ‡‰æ—¥èªŒä¸­ä»‹è»Ÿé«”
 //app.UseHttpLogging()
-//¿é¥X§Ö¨ú¤¤¤¶³nÅé
+//è¼¸å‡ºå¿«å–ä¸­ä»‹è»Ÿé«”
 //app.UseResponseCaching()
-//ÅTÀ³À£ÁY¤¤¤¶³nÅé
+//éŸ¿æ‡‰å£“ç¸®ä¸­ä»‹è»Ÿé«”
 //app.UseResponseCompression()
-//Session¤¤¤¶³nÅé
+//Sessionä¸­ä»‹è»Ÿé«”
 //app.UseSession()
-//ÀRºAÀÉ®×¤¤¤¶³nÅé
+//éœæ…‹æª”æ¡ˆä¸­ä»‹è»Ÿé«”
 //app.UseStaticFiles()
 //app.UseFileServer()
-//WebSocket¤ä´©¤¤¤¶³nÅé
+//WebSocketæ”¯æ´ä¸­ä»‹è»Ÿé«”
 //app.UseWebSockets()
 #endregion
 
@@ -90,13 +90,13 @@ app.MapGet("/ValueFromQuery", async (HttpContext context,
     [FromQuery(Name = "model")] string model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
-    return await Task.FromResult(Results.Ok(model));
+    return await Task.FromResult(Results.Text(model));
 });
 app.MapPost("/ValueFromBody", async (HttpContext context, 
     [FromBody] string model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
-    return await Task.FromResult(Results.Ok(model));
+    return await Task.FromResult(Results.Text(model));
 });
 app.MapGet("/JsonFromQuery", async  (HttpContext context, 
     [FromQuery(Name = "Text")] string? text, 
@@ -106,35 +106,40 @@ app.MapGet("/JsonFromQuery", async  (HttpContext context,
     app.Logger.LogInformation(JsonSerializer.Serialize(text));
     app.Logger.LogInformation(JsonSerializer.Serialize(value));
     app.Logger.LogInformation(JsonSerializer.Serialize(date));
-    return await Task.FromResult(Results.Ok(new { text, value, date }));
+    return await Task.FromResult(Results.Json(new { text, value, date }));
 });
 app.MapPost("/JsonFromBody", async (HttpContext context, 
     [FromBody] JsonDto model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
-    return await Task.FromResult(Results.Ok(model));
+    return await Task.FromResult(Results.Json(model));
 });
 app.MapPost("/Upload", async (HttpContext context) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(context.Request.Form.Files));
     app.Logger.LogInformation(JsonSerializer.Serialize(context.Request.Form.ToList()));
-    return await Task.FromResult(Results.Ok());
+    return await Task.FromResult(Results.Text(""));
 });
 app.MapGet("/Download", async (HttpContext context) =>
 {
     var source = "d:/workspace/Download.zip";
     if (File.Exists(source))
     {
-        context.Response.StatusCode = 200;
-        context.Response.ContentType = "application/download";
+        //context.Response.StatusCode = 200;
+        //context.Response.ContentType = "application/download";
         context.Response.Headers.Add("content-disposition", $"attachment; filename=Download.zip");
-        await context.Response.SendFileAsync(source);
+        //await context.Response.SendFileAsync(source);
+        return Results.File(
+            path: source,
+            contentType: "application/download"
+        );
     }
     else
     {
-        context.Response.StatusCode = 200;
-        context.Response.ContentType = "text/plain";
-        await context.Response.WriteAsync("File Not Exists");
+        //context.Response.StatusCode = 200;
+        //context.Response.ContentType = "text/plain";
+        //await context.Response.WriteAsync("File Not Exists");
+        return Results.Text("File Not Exists");
     }
 });
 // login
@@ -144,7 +149,7 @@ app.MapPost("/SignIn", async (HttpContext context,
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
     if (!string.IsNullOrEmpty(model.Account) && !string.IsNullOrEmpty(model.Password))
     {
-        return await Task.FromResult(Results.Ok(DateTime.Now.AddSeconds(10)));
+        return await Task.FromResult(Results.Text(DateTime.Now.AddSeconds(10).Ticks.ToString()));
     }
     else
     {
@@ -158,12 +163,12 @@ app.MapGet("/Validate", async (HttpContext context,
     return await Task.FromResult(Results.Ok());
 });
 app.MapPost("/Refresh", async (HttpContext context, 
-    [FromBody] DateTime? model) =>
+    [FromBody] string? model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
     if (model != null)
     {
-        return await Task.FromResult(Results.Ok(DateTime.Now.AddSeconds(10)));
+        return await Task.FromResult(Results.Text(DateTime.Now.AddSeconds(10).Ticks.ToString()));
     }
     else
     {
@@ -172,7 +177,7 @@ app.MapPost("/Refresh", async (HttpContext context,
 });
 app.MapPost("/SignOut", async (HttpContext context) =>
 {
-    return await Task.FromResult(Results.Ok());
+    return await Task.FromResult(Results.Text(""));
 });
 #endregion
 
@@ -184,15 +189,15 @@ class DefaultMiddleware
 {
     private readonly RequestDelegate _dequestDelegate;
     private readonly ILogger<DefaultMiddleware> _logger;
-    //private readonly List<string> _authorizationPath = new List<string>()
-    //{
-    //    "/ValueFromQuery",
-    //    "/ValueFromBody",
-    //    "/JsonFromQuery",
-    //    "/JsonFromBody",
-    //    "/Download",
-    //    "/Upload",
-    //};
+    private readonly List<string> _authorizationPath = new List<string>()
+    {
+        "/ValueFromQuery",
+        "/ValueFromBody",
+        "/JsonFromQuery",
+        "/JsonFromBody",
+        "/Download",
+        "/Upload",
+    };
     public DefaultMiddleware(RequestDelegate requestDelegate,
         ILogger<DefaultMiddleware> logger)
     {
@@ -213,7 +218,7 @@ class DefaultMiddleware
         //    {
         //        try
         //        {
-        //            var token = Convert.ToDateTime(context.Request.Headers["token"]);
+        //            var token = new DateTime(Convert.ToInt64(context.Request.Headers["token"]));
         //            if (token > DateTime.Now)
         //            {
         //                await _dequestDelegate(context);
