@@ -86,6 +86,14 @@ app.MapGet("/{id}", async (HttpContext context,
     return await Task.FromResult(Results.Ok());
 });
 // test
+app.MapGet("/Free", async (HttpContext context) =>
+{
+    return await Task.FromResult(Results.Text("Free Success"));
+});
+app.MapGet("/Auth", async (HttpContext context) =>
+{
+    return await Task.FromResult(Results.Text("Auth Success"));
+});
 app.MapGet("/ValueFromQuery", async (HttpContext context,
     [FromQuery(Name = "model")] string model) =>
 {
@@ -191,12 +199,13 @@ class DefaultMiddleware
     private readonly ILogger<DefaultMiddleware> _logger;
     private readonly List<string> _authorizationPath = new List<string>()
     {
-        "/ValueFromQuery",
-        "/ValueFromBody",
-        "/JsonFromQuery",
-        "/JsonFromBody",
-        "/Download",
-        "/Upload",
+        "/Auth",
+        //"/ValueFromQuery",
+        //"/ValueFromBody",
+        //"/JsonFromQuery",
+        //"/JsonFromBody",
+        //"/Download",
+        //"/Upload",
     };
     public DefaultMiddleware(RequestDelegate requestDelegate,
         ILogger<DefaultMiddleware> logger)
@@ -207,38 +216,38 @@ class DefaultMiddleware
     public async Task Invoke(HttpContext context)
     {
         _logger.LogInformation($"[{context.Request.Method}][{context.Request.Path}][{context.Request.QueryString}]");
-        await _dequestDelegate(context);
-        //if (!_authorizationPath.Contains(context.Request.Path))
-        //{
-        //    await _dequestDelegate(context);
-        //}
-        //else
-        //{
-        //    if (context.Request.Headers.Keys.Contains("token"))
-        //    {
-        //        try
-        //        {
-        //            var token = new DateTime(Convert.ToInt64(context.Request.Headers["token"]));
-        //            if (token > DateTime.Now)
-        //            {
-        //                await _dequestDelegate(context);
-        //            }
-        //            else
-        //            {
-        //                context.Response.StatusCode = 401;
-        //            }
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            _logger.LogError(e.ToString());
-        //            context.Response.StatusCode = 403;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        context.Response.StatusCode = 403;
-        //    }
-        //}
+        //await _dequestDelegate(context);
+        if (!_authorizationPath.Contains(context.Request.Path))
+        {
+            await _dequestDelegate(context);
+        }
+        else
+        {
+            if (context.Request.Headers.Keys.Contains("token"))
+            {
+                try
+                {
+                    var token = new DateTime(Convert.ToInt64(context.Request.Headers["token"]));
+                    if (token > DateTime.Now)
+                    {
+                        await _dequestDelegate(context);
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = 401;
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e.ToString());
+                    context.Response.StatusCode = 403;
+                }
+            }
+            else
+            {
+                context.Response.StatusCode = 403;
+            }
+        }
     }
 }
 class TokenMiddleware
