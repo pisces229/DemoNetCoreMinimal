@@ -86,27 +86,27 @@ app.MapGet("/{id}", async (HttpContext context,
     return await Task.FromResult(Results.Ok());
 });
 // test
-app.MapGet("/Free", async (HttpContext context) =>
+app.MapGet("/free", async (HttpContext context) =>
 {
     return await Task.FromResult(Results.Text("Free Success"));
 });
-app.MapGet("/Auth", async (HttpContext context) =>
+app.MapGet("/auth", async (HttpContext context) =>
 {
     return await Task.FromResult(Results.Text("Auth Success"));
 });
-app.MapGet("/ValueFromQuery", async (HttpContext context,
+app.MapGet("/valueFromQuery", async (HttpContext context,
     [FromQuery(Name = "model")] string model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
     return await Task.FromResult(Results.Text(model));
 });
-app.MapPost("/ValueFromBody", async (HttpContext context, 
+app.MapPost("/valueFromBody", async (HttpContext context, 
     [FromBody] string model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
     return await Task.FromResult(Results.Text(model));
 });
-app.MapGet("/JsonFromQuery", async  (HttpContext context, 
+app.MapGet("/jsonFromQuery", async  (HttpContext context, 
     [FromQuery(Name = "Text")] string? text, 
     [FromQuery(Name = "Value")] int? value, 
     [FromQuery(Name = "Date")] DateTime? date) =>
@@ -116,21 +116,22 @@ app.MapGet("/JsonFromQuery", async  (HttpContext context,
     app.Logger.LogInformation(JsonSerializer.Serialize(date));
     return await Task.FromResult(Results.Json(new { text, value, date }));
 });
-app.MapPost("/JsonFromBody", async (HttpContext context, 
+app.MapPost("/jsonFromBody", async (HttpContext context, 
     [FromBody] JsonDto model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
     return await Task.FromResult(Results.Json(model));
 });
-app.MapPost("/Upload", async (HttpContext context) =>
+app.MapPost("/upload", async (HttpContext context) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(context.Request.Form.Files));
     app.Logger.LogInformation(JsonSerializer.Serialize(context.Request.Form.ToList()));
     return await Task.FromResult(Results.Text(""));
 });
-app.MapGet("/Download", async (HttpContext context) =>
+app.MapGet("/download", async (HttpContext context) =>
 {
-    var source = "d:/workspace/Download.zip";
+    var source = await Task.FromResult("d:/workspace/Download.zip");
+    //return Results.BadRequest("BadRequest");
     if (File.Exists(source))
     {
         //context.Response.StatusCode = 200;
@@ -151,7 +152,7 @@ app.MapGet("/Download", async (HttpContext context) =>
     }
 });
 // login
-app.MapPost("/SignIn", async (HttpContext context, 
+app.MapPost("/signIn", async (HttpContext context, 
     [FromBody] SignInDto model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
@@ -164,13 +165,13 @@ app.MapPost("/SignIn", async (HttpContext context,
         return await Task.FromResult(Results.BadRequest());
     }
 });
-app.MapGet("/Validate", async (HttpContext context,
+app.MapGet("/validate", async (HttpContext context,
     [FromHeader(Name = "Token")] string? token) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(context.Request.Headers));
     return await Task.FromResult(Results.Ok());
 });
-app.MapPost("/Refresh", async (HttpContext context, 
+app.MapPost("/refresh", async (HttpContext context, 
     [FromBody] string? model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
@@ -183,7 +184,7 @@ app.MapPost("/Refresh", async (HttpContext context,
         return await Task.FromResult(Results.BadRequest());
     }
 });
-app.MapPost("/SignOut", async (HttpContext context) =>
+app.MapPost("/signOut", async (HttpContext context) =>
 {
     return await Task.FromResult(Results.Text(""));
 });
@@ -199,13 +200,13 @@ class DefaultMiddleware
     private readonly ILogger<DefaultMiddleware> _logger;
     private readonly List<string> _authorizationPath = new List<string>()
     {
-        "/Auth",
-        //"/ValueFromQuery",
-        //"/ValueFromBody",
-        //"/JsonFromQuery",
-        //"/JsonFromBody",
-        //"/Download",
-        //"/Upload",
+        "/auth",
+        //"/valueFromQuery",
+        //"/valueFromBody",
+        //"/jsonFromQuery",
+        //"/jsonFromBody",
+        //"/download",
+        //"/upload",
     };
     public DefaultMiddleware(RequestDelegate requestDelegate,
         ILogger<DefaultMiddleware> logger)
