@@ -140,7 +140,7 @@ app.MapGet("/download", async (HttpContext context) =>
         //await context.Response.SendFileAsync(source);
         return Results.File(
             path: source,
-            contentType: "application/download"
+            contentType: "application/octet-stream"
         );
     }
     else
