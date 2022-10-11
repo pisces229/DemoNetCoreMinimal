@@ -94,6 +94,11 @@ app.MapGet("/auth", async (HttpContext context) =>
 {
     return await Task.FromResult(Results.Text("Auth Success"));
 });
+app.MapGet("/router", async (HttpContext context) =>
+{
+    var result = true;
+    return await Task.FromResult(result);
+});
 app.MapGet("/valueFromQuery", async (HttpContext context,
     [FromQuery(Name = "model")] string model) =>
 {
@@ -172,7 +177,7 @@ app.MapGet("/validate", async (HttpContext context,
     return await Task.FromResult(Results.Ok());
 });
 app.MapPost("/refresh", async (HttpContext context, 
-    [FromBody] string? model) =>
+    [FromBody] string model) =>
 {
     app.Logger.LogInformation(JsonSerializer.Serialize(model));
     if (model != null)
