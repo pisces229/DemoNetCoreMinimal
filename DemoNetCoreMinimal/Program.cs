@@ -139,7 +139,7 @@ app.MapPost("/upload", async (HttpContext context) =>
 });
 app.MapGet("/download", async (HttpContext context) =>
 {
-    var file = await Task.FromResult(new FileInfo("d:/workspace/download.zip"));
+    var file = await Task.FromResult(new FileInfo("c:/workspace/demoNetCoreMinimal/download.zip"));
     //return Results.BadRequest("BadRequest");
     if (file.Exists)
     {
