@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using System.Web;
 
 #region WebApplicationBuilder
 var builder = WebApplication.CreateBuilder(args);
@@ -88,6 +90,8 @@ app.MapGet("/{id}", async (HttpContext context,
 // test
 app.MapGet("/free", async (HttpContext context) =>
 {
+    //context.Response.Headers.Add("Cache-Control", "max-age=6");
+    //return await Task.FromResult(Results.Text(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
     return await Task.FromResult(Results.Text("Free Success"));
 });
 app.MapGet("/auth", async (HttpContext context) =>
@@ -135,25 +139,30 @@ app.MapPost("/upload", async (HttpContext context) =>
 });
 app.MapGet("/download", async (HttpContext context) =>
 {
-    var source = await Task.FromResult("d:/workspace/Download.zip");
+    var file = await Task.FromResult(new FileInfo("d:/workspace/download.zip"));
     //return Results.BadRequest("BadRequest");
-    if (File.Exists(source))
+    if (file.Exists)
     {
         //context.Response.StatusCode = 200;
-        //context.Response.ContentType = "application/download";
-        context.Response.Headers.Add("content-disposition", $"attachment; filename=Download.zip");
-        //await context.Response.SendFileAsync(source);
-        return Results.File(
-            path: source,
-            contentType: "application/octet-stream"
-        );
+        context.Response.ContentType = "application/octet-stream";
+        context.Response.Headers.Add("content-disposition", $"attachment; filename={HttpUtility.UrlEncode(file.Name)}");
+        //await context.Response.SendFileAsync(file.FullName);
+        var buffer = new byte[16 * 1024];
+        using (var fileStream = file.OpenRead())
+        {
+            var read = 0;
+            while ((read = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                await context.Response.Body.WriteAsync(buffer, 0, read);
+            }
+        }
+        //result.Data!.FileInfo.Delete();
     }
     else
     {
         //context.Response.StatusCode = 200;
-        //context.Response.ContentType = "text/plain";
-        //await context.Response.WriteAsync("File Not Exists");
-        return Results.Text("File Not Exists");
+        context.Response.ContentType = "text/plain; charset=utf-8";
+        await context.Response.WriteAsync("File Not Exists");
     }
 });
 // login
