@@ -88,6 +88,8 @@ app.MapGet("/{id}", async (HttpContext context,
     return await Task.FromResult(Results.Ok());
 });
 // test
+app.MapGet("/success", (HttpContext context) => Results.Ok("success"));
+app.MapGet("/fail", (HttpContext context) => Results.BadRequest("fail"));
 app.MapGet("/free", async (HttpContext context) =>
 {
     //context.Response.Headers.Add("Cache-Control", "max-age=6");
